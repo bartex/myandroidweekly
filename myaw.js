@@ -92,6 +92,11 @@ router.get('/archive', function(req, res) {
 	})
 })
 
+function parseIssue(issue) {
+	var regex = /Issue \#([0-9]*)|.+/;
+	return issue.match(regex);
+}
+
 //====================
 // Database
 mongoose.connect('mongodb://127.0.0.1:27017/myawdb', function(err, db) {
@@ -103,6 +108,10 @@ mongoose.connect('mongodb://127.0.0.1:27017/myawdb', function(err, db) {
 		mongoose.connection.db.dropDatabase();
 	}
 })
+
+//====================
+//Poll data from androidweekly.net
+function pollArchive() {
 	request(url + '/archive', function(error, response, html) {
 		if (!error) {
 			var $ = cheerio.load(html);
@@ -121,16 +130,25 @@ mongoose.connect('mongodb://127.0.0.1:27017/myawdb', function(err, db) {
 				}
 				issues[i] = archive_response;
 			})
-			res.json(issues);
+
+			for (i = 0; i < issues.length; i++) {
+				var issue = new Issue();
+				issue.issue = issues[i].issue;
+				issue.link = issues[i].link;
+				issue.save();
+			}
+
+			//Check if there will be a new issue
+			//once a week.
+			//We have 86400 seconds in a day
+			setInterval(pollArchive, 7*86400*1000);
 		}
 	})
-})
-
-function parseIssue(issue) {
-	var regex = /Issue \#([0-9]*)|.+/;
-	return issue.match(regex);
 }
 
 app.use('/api', router);
 app.listen(port);
+
+pollArchive();
+
 exports = module.exports = app;
