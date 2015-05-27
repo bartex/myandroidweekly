@@ -66,15 +66,35 @@ router.get('/latest', function(req, res) {
 			metajson.articles = articles;
 
 			//Get all sections
-			$('.sections tr h2').each(function(i, element){
+			var sections_tr = []
+			$('.sections tr').each(function(i, element){
 				var data = $(this);
+				var section_name = data.find('h2').text().trim();
 
-				var section = {
-					section: data.text().trim()
-				}
-				sections[i] = section;
+				sections_tr[i] = section_name;
 			})
-			metajson.sections = sections;
+
+
+			var counter = 0,
+		        section_cnt = 0;
+			if (sections_tr.length > 0) {
+				for (i = sections_tr.length - 1; i >= 0; i--) {
+					if (sections_tr[i] != 0) {
+						var section = {
+							section: sections_tr[i],
+							articles: Math.floor(counter / 2)
+						};
+						sections[section_cnt] = section;
+						section_cnt++;
+
+						counter = 0;
+					} else {
+						counter++
+					}
+				}
+			}
+
+			metajson.sections = sections.reverse();
 			metajson.sections.articles = articles;
 
 	        res.json(metajson);
