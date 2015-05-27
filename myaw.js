@@ -1,10 +1,13 @@
 var express = require('express');
 var request = require('request');
 var cheerio = require('cheerio');
+var mongoose = require('mongoose');
 var app = express();
 
 var port = 8080;
 
+var Issue = require('./models/issue')
+// ======================
 // Router for API
 var router = express.Router();
 
@@ -81,6 +84,25 @@ router.get('/latest', function(req, res) {
 })
 
 router.get('/archive', function(req, res) {
+	Issue.find(function(err, issues) {
+		if (err)
+			res.send(err)
+
+		res.json(issues);
+	})
+})
+
+//====================
+// Database
+mongoose.connect('mongodb://127.0.0.1:27017/myawdb', function(err, db) {
+    if (!err) {
+        console.log("Database connected");
+		//Everytime when we connect to the db
+		//we want to drop the databse to refill
+		//the data again. It's not much.
+		mongoose.connection.db.dropDatabase();
+	}
+})
 	request(url + '/archive', function(error, response, html) {
 		if (!error) {
 			var $ = cheerio.load(html);
