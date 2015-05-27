@@ -149,6 +149,7 @@ function pollArchive() {
 app.use('/api', router);
 app.listen(port);
 
+console.log("Starting server at: " + port);
 pollArchive();
 
 exports = module.exports = app;
